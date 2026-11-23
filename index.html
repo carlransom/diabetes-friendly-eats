@@ -909,8 +909,10 @@ nav.main a:hover{background:var(--green-soft);color:var(--green)}
 /* Featured + recipe cards */
 .feat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
 .recipe-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
-.rcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);cursor:pointer;text-align:left;padding:0;width:100%;font:inherit;color:inherit;display:flex;flex-direction:column}
-.rcard:hover{outline:2px solid var(--gold)}
+.card-shell{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.card-shell:hover{outline:2px solid var(--gold)}
+.rcard{background:transparent;border:none;border-radius:0;box-shadow:none;cursor:pointer;text-align:left;padding:0;width:100%;font:inherit;color:inherit;display:flex;flex-direction:column;flex:1}
+.rcard:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
 .rcard img{width:100%;height:240px;object-fit:cover}
 .rcard .body{padding:22px 24px 24px;display:flex;flex-direction:column;gap:8px;flex:1}
 .rcard h3{font-size:1.3rem;color:var(--green)}
@@ -922,6 +924,20 @@ nav.main a:hover{background:var(--green-soft);color:var(--green)}
 .rcard.typo .body{padding-top:26px}
 .rcard .rule{height:4px;background:linear-gradient(90deg,var(--gold),transparent);border-radius:2px;margin-bottom:6px;width:64px}
 .open-hint{font-weight:700;color:var(--gold-text);font-size:.92rem}
+
+/* Share row — sits outside the card button, attached to the bottom of the card shell */
+.share-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:14px 20px 18px;border-top:1px solid var(--line);background:var(--cream-2)}
+.share-label{font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-text);margin-right:2px}
+.share-btn{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--green);font:inherit;font-size:.88rem;font-weight:700;line-height:1.2;text-decoration:none;cursor:pointer}
+.share-btn svg{width:18px;height:18px;flex:0 0 auto}
+.share-btn:hover{border-color:var(--gold);background:var(--gold-soft)}
+.share-btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.share-btn.copied{background:var(--green);border-color:var(--green);color:#FFF8EA}
+@media (prefers-color-scheme: dark){.share-btn.copied{color:#14231A}}
+.share-status{font-size:.88rem;font-weight:700;color:var(--green);min-height:1.2em}
+.share-status:empty{display:none}
+/* Share row inside the recipe modal */
+.share-row-modal{border:1px solid var(--line);border-radius:14px;margin-top:18px;background:var(--cream-2)}
 
 /* Category blocks */
 .cat-block{padding:34px 0 6px}
@@ -1294,14 +1310,41 @@ function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
 function metaHTML(r){
   return '<div class="meta"><span>Prep '+esc(r.prep)+'</span><span>Cook '+esc(r.cook)+'</span><span>'+esc(r.serves)+'</span><span class="carbs">'+esc(r.carbs)+' / serving</span></div>';
 }
+var SITE_BASE = "https://diabetesfriendlyeats.com/";
+var INSTAGRAM_URL = "https://www.instagram.com/diabetes.friendly.eats/";
+function recipePageUrl(r){ return SITE_BASE + "#recipe-" + r.id; }
+function recipeImageUrl(r){ return r.img ? SITE_BASE + r.img : SITE_BASE + "assets/hero.webp"; }
+function attrUrl(u){ return u.replace(/&/g,"&amp;"); }
+var ICON_PIN = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592.026 11.985.026L12.017 0z"/></svg>';
+var ICON_FB = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>';
+var ICON_IG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r=".6" fill="currentColor" stroke="none"/></svg>';
+var ICON_LINK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 14a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 10a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+function shareHTML(r, inModal){
+  var pageUrl = recipePageUrl(r);
+  var imgUrl = recipeImageUrl(r);
+  var t = esc(r.title);
+  var pinUrl = "https://pinterest.com/pin/create/button/?url=" + encodeURIComponent(pageUrl) + "&media=" + encodeURIComponent(imgUrl) + "&description=" + encodeURIComponent(r.title + " — Diabetes Friendly Eats");
+  var fbUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(pageUrl);
+  return '<div class="share-row'+(inModal?' share-row-modal':'')+'" aria-label="Share '+t+'">'
+    + '<span class="share-label">'+(inModal?'Share this recipe':'Share')+'</span>'
+    + '<a class="share-btn" href="'+attrUrl(pinUrl)+'" target="_blank" rel="noopener" aria-label="Share '+t+' on Pinterest">'+ICON_PIN+'<span>Pinterest</span></a>'
+    + '<a class="share-btn" href="'+attrUrl(fbUrl)+'" target="_blank" rel="noopener" aria-label="Share '+t+' on Facebook">'+ICON_FB+'<span>Facebook</span></a>'
+    + '<a class="share-btn" href="'+INSTAGRAM_URL+'" target="_blank" rel="noopener" aria-label="Diabetes Friendly Eats on Instagram">'+ICON_IG+'<span>Instagram</span></a>'
+    + '<button type="button" class="share-btn share-copy" data-copy="'+pageUrl+'" aria-label="Copy link to '+t+'">'+ICON_LINK+'<span class="copy-label">Copy link</span></button>'
+    + '<span class="share-status" role="status" aria-live="polite"></span>'
+    + '</div>';
+}
 function cardHTML(r, typo, eager){
   var img = r.img ? '<img src="'+r.img+'" width="1920" height="1280" alt="'+esc(r.imgAlt||r.title)+'"'+(eager?'':' loading="lazy"')+' />' : '';
-  return '<button type="button" class="rcard'+(typo?' typo':'')+'" data-recipe="'+r.id+'" aria-haspopup="dialog">'
+  return '<div class="card-shell">'
+    + '<button type="button" class="rcard'+(typo?' typo':'')+'" data-recipe="'+r.id+'" aria-haspopup="dialog">'
     + img
     + '<span class="body">' + (typo?'<span class="rule"></span>':'')
     + '<h3>'+esc(r.title)+'</h3><p class="desc">'+esc(r.desc)+'</p>'
     + metaHTML(r)
-    + '<span class="open-hint">Open the full recipe →</span></span></button>';
+    + '<span class="open-hint">Open the full recipe →</span></span></button>'
+    + shareHTML(r, false)
+    + '</div>';
 }
 
 /* Categories */
@@ -1339,6 +1382,7 @@ function openRecipe(id){
     + '<div class="m-body"><h2 id="modalTitle">'+esc(r.title)+'</h2>'
     + '<p class="m-desc">'+esc(r.desc)+'</p>'
     + metaHTML(r)
+    + shareHTML(r, true)
     + '<h3>Ingredients</h3><ul>' + r.ingredients.map(function(x){return '<li>'+esc(x)+'</li>';}).join('') + '</ul>'
     + '<h3>Steps</h3><ol>' + r.steps.map(function(x){return '<li>'+esc(x)+'</li>';}).join('') + '</ol>'
     + '<h3>Nutrition</h3><div class="nutrition">'
@@ -1363,12 +1407,62 @@ function closeRecipe(){
   if(lastFocus && lastFocus.focus) lastFocus.focus();
 }
 document.addEventListener('click', function(e){
+  if(e.target.closest && e.target.closest('.share-row')) return;
   var t = e.target.closest ? e.target.closest('[data-recipe]') : null;
   if(t){ openRecipe(t.getAttribute('data-recipe')); }
+});
+function showCopied(btn){
+  var row = btn.closest ? btn.closest('.share-row') : null;
+  var status = row ? row.querySelector('.share-status') : null;
+  var label = btn.querySelector('.copy-label');
+  if(status) status.textContent = "Link copied";
+  if(label) label.textContent = "Link copied";
+  btn.classList.add('copied');
+  if(btn._copyTimer) clearTimeout(btn._copyTimer);
+  btn._copyTimer = setTimeout(function(){
+    if(status) status.textContent = "";
+    if(label) label.textContent = "Copy link";
+    btn.classList.remove('copied');
+  }, 2200);
+}
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly','');
+  ta.style.position = 'absolute';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch(err) { ok = false; }
+  document.body.removeChild(ta);
+  return ok;
+}
+document.addEventListener('click', function(e){
+  var btn = e.target.closest ? e.target.closest('.share-copy') : null;
+  if(!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  var url = btn.getAttribute('data-copy');
+  if(!url) return;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){ showCopied(btn); }, function(){ if(fallbackCopy(url)) showCopied(btn); });
+  } else if(fallbackCopy(url)){
+    showCopied(btn);
+  }
 });
 document.getElementById('modalClose').addEventListener('click', closeRecipe);
 backdrop.addEventListener('click', function(e){ if(e.target===backdrop) closeRecipe(); });
 document.addEventListener('keydown', function(e){ if(e.key==='Escape' && backdrop.classList.contains('open')) closeRecipe(); });
+
+/* Shared recipe links: #recipe-<id> opens that recipe's dialog */
+function openRecipeFromHash(){
+  var m = /^#recipe-(.+)$/.exec(window.location.hash || "");
+  if(!m) return;
+  openRecipe(m[1]);
+}
+window.addEventListener('hashchange', openRecipeFromHash);
+openRecipeFromHash();
 </script>
 </body>
 </html>
